@@ -1,0 +1,231 @@
+<html>
+<head>
+	<TITLE></TITLE>
+	<META content="text/html; charset=utf-8" http-equiv=Content-Type>
+	<script type="text/javascript"src="../js/jquery-3.1.1.min.js">
+
+	</script>
+	<script type="text/javascript"src="../js/top.js">
+
+	</script>
+	<script src="../js/tojson.js">
+
+	</script>
+</head>
+<body>
+<div id="top">
+</div>
+
+
+<form id="form1">
+	<TABLE cellpadding=10 cellspacing=0 align=center border=1 width="400"
+		bgcolor=#dddddd>
+		<TR>
+			<TD>
+				<FONT color=darkgreen>
+					<H3>
+						基本信息
+					</H3>
+				</FONT>
+				<TABLE border=0  bgcolor=#FFFF88  width="100%">
+					<TR bgcolor=#FFFF88>						
+						<TD>
+						 用户名<input id="username" type="text" name="username"/>
+							<span id="uerror"></span>
+						</TD>
+					</TR>
+					<TR bgcolor=#FFFF88>
+						
+						<TD>
+							密码<input id="password" type="text" name="password"/>
+							
+						</TD>
+					</TR>
+					<TR bgcolor=#FFFF88>
+						
+						<TD>
+
+							重复密码<input id="repassword" type="text" name="repassword"/>
+						</TD>
+					</TR>
+
+				</TABLE>
+				<FONT color=darkgreen><H3>
+					附加信息
+				</H3>
+				</FONT>
+
+				<TABLE bgcolor="#FFFF88" border=0
+					   bgcolor=#FFFF88 width="100%">
+					<TR bgcolor=#FFFF88>
+
+						<TD>
+							邮箱：<input type="text" name="email" id="email"/>
+						</TD>
+					</TR>
+
+					<TR bgcolor=#FFFF88>
+
+						<TD>
+							姓名：<input type="text" name="xm" id="xm"/>
+						</TD>
+					</TR>
+
+					<TR bgcolor=#FFFF88>
+
+						<TD>
+							地址：<input type="text" name="address" id="address"/>
+
+						</TD>
+					</TR>
+
+
+				</TABLE>
+
+
+
+
+				<FONT color=darkgreen><H3>
+							语言选择
+					</H3>
+				</FONT>
+
+				<TABLE bgcolor="#FFFF88" border=0
+					bgcolor=#FFFF88 width="100%">
+					<TR bgcolor=#FFFF88>
+
+						<TD>
+							语种:<select name="profile.lang" id="lan">
+
+
+								</select>
+							<script type="text/javascript">
+								var lan=[
+									{"lanid":"eng","name":"英语"},
+									{"lanid":"chi","name":"中文"}
+								];
+								$(lan).each(function (i) {
+									var str="<option value='"+lan[i].lanid+"'>"+lan[i].name+"</option>";
+									$("#lan").append(str);
+								});
+							</script>
+						</TD>
+					</TR>
+				</TABLE>
+
+
+				<FONT color=darkgreen><H3>
+						 喜好选择
+					</H3>
+				</FONT>
+
+				<TABLE bgcolor="#FFFF88" border=0 cellpadding=3 cellspacing=1 width="100%">
+					<TR bgcolor=#FFFF88>
+
+						<TD>
+							喜好:
+							<select name="profile.catid" id="interest">
+
+
+							</select>
+							<script type="text/javascript">
+								var CATE_URL="http://localhost:8080/pet/habbit";
+								$.ajax({
+									url:CATE_URL,
+									dataType:"json",
+									type:"get",
+									statusCode:{
+										200:function (data) {
+											$("#interest option").remove();
+											$(data).each(function (i) {
+												var str="<option value='"+data[i].catid+"'>"+data[i].name+"</option>";
+												$("#interest").append(str);
+											});
+										}
+									}
+									
+								});
+							</script>
+						</TD>
+					</TR>
+
+				</TABLE>
+	</TABLE>
+</form>
+	<BR>
+	<CENTER>
+		<input border=0 type="image" src="../images/button_submit.gif" id="btn"/>
+	</CENTER>
+<script type="text/javascript">
+	function verify(value){
+		var VERI_URL="http://localhost:8080/account/verify/";
+		var flag=true;
+		$.ajax({
+			url:VERI_URL+value,
+			data:"get",
+			statusCode:{
+				409:function () {
+					flag=false;
+					$("#uerror").html("用户已经被注册！");
+				},
+				200:function () {
+					$("#uerror").html('');
+				}
+			}
+		});
+		return flag;
+	}
+	$("#username").blur(function(){//用户名失去焦点进行是否宠物验证
+		var value=$(this).val();
+		verify(value);
+	});
+	var REG_URL="http://localhost:8080/account/reg";
+	$("#btn").click(function () {
+		if($("#username").val()==""){
+			alert("用户名不能为空");
+			return
+		}
+		if($("#password").val()==""){
+			alert('密码不能为空！');
+			return
+		}
+		if($("#repassword").val()==""){
+			alert('校验密码不能为空！');
+			return
+		}
+		if($("#password").val()!=$("#repassword").val()){
+			alert('密码和校验密码必须相同！');
+			return
+		}
+		var reg=/^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$/;
+
+		if(!reg.test($("#email").val())){
+			alert('邮箱格式错误！');
+			return
+		}
+		var value=$("#username").val();
+
+		if( !verify(value)){
+			return ;
+		}
+
+		var json=JSON.stringify($("#form1").serializeObject());
+		$.ajax({
+			url:REG_URL,
+			data:json,
+			contentType:"application/json",
+			type:"POST",
+			statusCode:{
+				200:function () {
+					window.location="login.html";
+				},
+				409:function () {
+					alert("注册失败");
+				}
+			}
+		});
+	});
+
+</script>
+</body>
+</html>

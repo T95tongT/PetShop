@@ -1,0 +1,235 @@
+<html>
+<head>
+	<TITLE></TITLE>
+	<META content="text/html; charset=utf-8" http-equiv=Content-Type>
+	<script src="../js/jquery-3.1.1.min.js" type="text/javascript"></script>
+	<script type="text/javascript" src="../js/top.js"></script>
+
+	<script src="../js/jquery.cookie-1.4.1.min.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="top">
+
+</div>
+<table border="0" width="100%" cellspacing="0" cellpadding="0">
+	<tr>
+		<td valign="top" width="5%" align="left">
+			<table align="left" bgcolor="#008800" border="0" cellspacing="2"
+				   cellpadding="2">
+				<tr>
+					<td bgcolor="#FFFF88">
+						<a href="main.xhtml"><b><font color="BLACK" size="2">&lt;&lt; 主菜单</font>
+						</b></a>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td valign="top" align="center">
+			<h2 align="center">
+
+			</h2>
+
+			<table align="center" bgcolor="#008800" border="0" cellspacing="2"
+				   cellpadding="5" id="list">
+				<tbody>
+				<tr bgcolor="#cccccc" id="0">
+					<td>
+						项目编号
+					</td>
+					<td>
+						产品编号
+					</td>
+					<td>
+						产品描述
+					</td>
+					<td>
+						<b>项目描述</b>
+					</td>
+					<td width="100">
+						单价
+					</td>
+					<td>
+						数量
+					</td>
+					<td>
+						合计
+					</td>
+					<td>
+						&nbsp;
+					</td>
+				</tr>
+
+
+				</tbody>
+
+
+			</table>
+			总计：<span id="sum"></span>
+
+
+			<center>
+				<input type="image" src="../images/button_checkout.gif" id="checkout"/>
+			</center>
+
+
+		</td>
+
+
+	</tr>
+	<tr>
+
+
+	</tr>
+</table>
+
+<script type="text/javascript">
+	var oid;
+	var username;
+
+	function show() {
+		var QUERY_CART = "http://localhost:8080/cart/query";
+		var str = location.href;
+		var index = str.lastIndexOf("?");
+
+		oid = str.substring(index + 1, str.length).split("=")[1];//得到的是订单编号
+
+		username = $.cookie("pusername");//取cookie
+		if (username == undefined) {//失效状态
+			window.location = "login.html";
+			return;
+		}
+
+		var json = {
+			orderid: oid,
+			username: username
+
+		}
+
+		$.ajax({
+			url: QUERY_CART,
+			type: "POST",
+			dataType: "json",
+			contentType: "application/json",
+			data: JSON.stringify(json),
+			statusCode: {
+				200: function (data) {
+					$("#list tr:not(:first)").remove();
+					var sum=0;
+					$(data).each(function (index) {
+						var id = $("#list>tbody>tr:last").attr("id");
+						sum=sum+(data[index].item.listprice * data[index].quantity);
+
+						id++;
+						var str = "<tr bgcolor='#FFFF88' id='" + id + "'>" +
+								"<td>" + data[index].itemid + "</td>" +
+								"<td>" + data[index].item.product.productid + "</td>" +
+								"<td>" + data[index].item.product.descn + "</td>" +
+								"<td>" + data[index].item.attr1 + "</td>" +
+								"<td>" + data[index].item.listprice + "</td>" +
+								"<td> <input type='number' onblur='update(\""+data[index].itemid+"\",this)'  value='"+ data[index].quantity +"'></td>" +
+								"<td>" + data[index].item.listprice * data[index].quantity + "</td>" +
+								"<td><input type='image' src='../images/button_remove.gif' onclick='del(\"" + data[index].itemid + "\")'/>" + "</td>" +
+								"</tr>";
+						$("#list>tbody").append(str);
+
+					});
+					$("#sum").html(sum);
+
+				}
+
+			}
+
+
+		});
+	}
+	show();
+
+	function update(itemid,obj) {
+		if (username == undefined) {//失效状态
+			window.location = "login.html";
+			return;
+		}
+		var CART_DEL = "http://localhost:8080/cart/up";
+		var json = {
+			username: username,
+			itemid: itemid,
+			orderid: oid,
+			quantity:obj.value
+		}
+
+		$.ajax({
+			url: CART_DEL,
+			type: "PUT",
+			contentType: "application/json",
+			data: JSON.stringify(json),
+			statusCode: {
+				200: function () {
+					show();
+				}
+			}
+
+		});
+
+	}
+	$("#checkout").click(function(){
+		if (username == undefined) {//失效状态
+			window.location = "login.html";
+			return;
+		}
+		var CHECKOUT = "http://localhost:8080/cart/checkout";
+
+		var json = {
+			username: username,
+			orderdate: new Date(),
+			orderid: oid,
+			totalprice:$("#sum").html()
+		}
+
+		$.ajax({
+			url: CHECKOUT,
+			type: "PUT",
+			contentType: "application/json",
+			data: JSON.stringify(json),
+			statusCode: {
+				200: function () {
+					window.location="main.html?username="+username;
+				}
+			}
+
+		});
+
+
+
+	});
+
+	function del(itemid) {
+		if (username == undefined) {//失效状态
+			window.location = "login.html";
+			return;
+		}
+		var CART_DEL = "http://localhost:8080/cart/del";
+
+		var json = {
+			username: username,
+			itemid: itemid,
+			orderid: oid
+		}
+
+		$.ajax({
+			url: CART_DEL,
+			type: "DELETE",
+			contentType: "application/json",
+			data: JSON.stringify(json),
+			statusCode: {
+				200: function () {
+					show();
+				}
+			}
+
+		});
+
+
+	}
+</script>
+</body>
+</html>

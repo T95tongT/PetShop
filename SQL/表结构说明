@@ -1,0 +1,133 @@
+account:用户表
+  username :用户名 PK
+  password：密码
+  email:邮箱
+  xm：姓名
+  address：居住地址
+profile：喜好表
+  username:用户名 pk fk
+  lang:你的母语
+  catid：你喜爱的宠物 fk
+category:宠物种类表
+  catid：宠物编号 pk
+  name：宠物名称
+  descn：宠物描述
+product:宠物产品表
+  productid：产品id pk
+  catid：种类 fk category
+  name:产品名称
+  descn：产品说明
+  pic：产品图片
+item:项目表
+  itemid：项目id pk
+  productid 产品id fk product
+  listprice：单价
+  attr1:项目说明
+orders 订单表
+  username 用户 pk
+  orderid 订单编号 pk
+  orderdate 订单日期
+  totalprice：总计价格
+cart 购物车
+  username：用户名 pk
+  orderid ：订单编号 pk
+  itemid:项目id pk
+  quantity:数量
+
+
+drop procedure if exists addCart8 ;
+delimiter //
+create procedure addCart8(
+	in in_username varchar(10),
+	in in_itemid varchar(10),
+	in in_quantity int
+)
+begin
+	set @maxid:=0;
+	set @odate:='';
+	set @oquantity=0;
+	select orderid ,orderdate into @maxid,@odate
+	from orders
+	where username=in_username
+	order by orderid desc
+	limit 1;
+
+	if @odate is null  then#还没买完商品吗，还可以继续购买
+		#看购物车在当前订单编号下 当前用户下，当前买的产品下是否有相同产品
+		#如果有相同产品，新老数量叠加。
+		#如果是新商品，做新纪录存储
+		select quantity into @oquantity
+		from cart
+		where username=in_username and
+		 orderid=@maxid and
+		 itemid=in_itemid;
+		 if @oquantity='' then#没有老商品
+		 	insert into cart(username,orderid,itemid,quantity)
+		 	values(in_username,@maxid,in_itemid,in_quantity);
+		 else#只能修改了
+		 	set @nquantity=in_quantity+@oquantity;
+
+		 	call updateCart8(in_username,in_itemid,@nquantity);
+
+		 end if;
+
+
+
+	end if;
+
+
+end //
+delimiter ;
+
+
+drop procedure if exists updateCart8 ;
+delimiter //
+create procedure updateCart8(
+	in in_username varchar(10),
+	in in_itemid varchar(10),
+	in in_quantity int
+)
+begin
+
+
+		 	update cart set quantity=in_quantity
+		 		where username=in_username and
+				 orderid=@maxid and
+				 itemid=in_itemid;
+
+
+
+end //
+delimiter ;
+
+
+
+drop procedure if exists delCart8;
+delimiter //
+create procedure delCart8(
+	in in_username varchar(10),
+	in in_orderid int ,
+	in in_itemid varchar(10)
+)
+begin
+	delete from cart
+	where username=in_usernam and
+	orderid =in_orderid and
+	itemid=in_itemid;
+end //
+delimiter ;
+
+
+drop procedure if exists queryCart8;
+delimiter //
+create procedure queryCart8(
+	in_username varchar(10),
+	in_orderid int
+)
+begin
+
+	select * from cart
+	where username=in_username and
+	orderid=in_orderid;
+end //
+delimiter ;

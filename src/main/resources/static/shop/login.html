@@ -1,0 +1,93 @@
+<html>
+<head>
+	<TITLE></TITLE>
+	<META content="text/html; charset=utf-8" http-equiv=Content-Type>
+	<script type="text/javascript"src="../js/jquery-3.1.1.min.js">
+
+	</script>
+	<script type="text/javascript"src="../js/top.js">
+
+	</script>
+	<script type="text/javascript" src="../js/jquery.cookie-1.4.1.min.js">
+
+	</script>
+	<script src="../js/tojson.js">
+
+	</script>
+	<script type="text/javascript">
+		var LOGIN_URL="http://localhost:8080/account/login";
+		$(function(){
+
+
+			$("#btn").click(function () {
+				var json=JSON.stringify($("#form1").serializeObject());
+				$.ajax({
+					url:LOGIN_URL,
+					type:"post",
+					dataType:"json",
+					data:json,
+					contentType:"application/json",
+					statusCode:{
+						200:function (data) {
+							var today=new Date();
+							var exminute=new Date(today);
+							exminute.setMinutes(today.getMinutes()+30);//在当前时间下+30分钟
+							$.cookie("pusername",data.username,{'expires':exminute})
+
+							window.location="main.html?username="+data.username;
+						},
+						409:function () {
+							alert("FAIL");
+
+						}
+					}
+				});
+			});
+		})
+	</script>
+</head>
+<body>
+<div id="top">
+
+</div>
+
+<form id="form1">
+	<table align="center" border="0">
+		<tr>
+			<td colspan="2">
+				
+				<br />
+				&nbsp;
+			</td>
+		</tr>
+		<tr>
+			
+			<td>
+				用户名:<input id="username" name="username" type="text"/>
+			</td>
+		</tr>
+		<tr>
+			
+			<td>
+				密码:<input id="password" name="password" type="text"/>
+			</td>
+		</tr>
+		<tr>
+
+			<td>
+
+
+				<img id="btn"  src="../images/button_submit.gif" />
+
+				<a href="register.html"><img border="0"
+											 src="../images/button_register_now.gif" />
+				</a>
+			</td>
+		</tr>
+	</table>
+</form>
+
+
+
+</body>
+</html>
